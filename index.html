@@ -1,0 +1,3533 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a1020" />
+    <title>GymPro — Gym Management System</title>
+    <style>
+      /* ============================================================
+   THEME TOKENS
+   ============================================================ */
+      :root {
+        --bg: #0a1020;
+        --bg-soft: #0f1830;
+        --card: #121c33;
+        --card-2: #0e1729;
+        --text: #e8eefb;
+        --muted: #8ea3c1;
+        --border: #20304e;
+        --accent: #3b82f6;
+        --accent-2: #8b5cf6;
+        --green: #10b981;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
+        --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.22);
+        --radius: 16px;
+        --sidebar-w: 262px;
+        --ease: cubic-bezier(0.2, 0.8, 0.25, 1);
+      }
+      [data-theme="light"] {
+        --bg: #eef3fb;
+        --bg-soft: #ffffff;
+        --card: #ffffff;
+        --card-2: #f7fafd;
+        --text: #0f172a;
+        --muted: #5b6b85;
+        --border: #dde5f0;
+        --shadow: 0 12px 34px rgba(15, 23, 42, 0.1);
+        --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.06);
+      }
+
+      /* ============================================================
+   BASE
+   ============================================================ */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+        transition:
+          background 0.4s ease,
+          color 0.35s ease;
+      }
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(90px);
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.35;
+        transition: opacity 0.5s ease;
+      }
+      body::before {
+        width: 520px;
+        height: 520px;
+        top: -180px;
+        left: -120px;
+        background: radial-gradient(circle, #3b82f6, transparent 70%);
+        animation: blob 18s ease-in-out infinite alternate;
+      }
+      body::after {
+        width: 480px;
+        height: 480px;
+        bottom: -200px;
+        right: -120px;
+        background: radial-gradient(circle, #8b5cf6, transparent 70%);
+        animation: blob 22s ease-in-out infinite alternate-reverse;
+      }
+      [data-theme="light"] body::before,
+      [data-theme="light"] body::after {
+        opacity: 0.2;
+      }
+      @keyframes blob {
+        0% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(50px, 40px) scale(1.12);
+        }
+        100% {
+          transform: translate(-30px, 60px) scale(0.95);
+        }
+      }
+
+      ::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--muted);
+      }
+
+      /* ============================================================
+   LAYOUT
+   ============================================================ */
+      .app {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* SIDEBAR */
+      .sidebar {
+        width: var(--sidebar-w);
+        flex: 0 0 var(--sidebar-w);
+        background: color-mix(in srgb, var(--bg-soft) 88%, transparent);
+        backdrop-filter: blur(18px);
+        border-right: 1px solid var(--border);
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 22px 14px;
+        transition: transform 0.35s var(--ease);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 10px 20px;
+      }
+      .brand-logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        font-size: 20px;
+        box-shadow: 0 8px 22px rgba(59, 130, 246, 0.4);
+        animation: floaty 4s ease-in-out infinite;
+      }
+      @keyframes floaty {
+        50% {
+          transform: translateY(-4px) rotate(-3deg);
+        }
+      }
+      .brand-txt b {
+        display: block;
+        font-size: 18px;
+        letter-spacing: -0.3px;
+      }
+      .brand-txt span {
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 6px;
+        overflow-y: auto;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        border-radius: 12px;
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14.5px;
+        font-weight: 600;
+        text-align: left;
+        width: 100%;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          transform 0.2s;
+        position: relative;
+      }
+      .nav-item i {
+        font-style: normal;
+        font-size: 17px;
+        width: 22px;
+        text-align: center;
+      }
+      .nav-item:hover {
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+        color: var(--text);
+        transform: translateX(3px);
+      }
+      .nav-item.active {
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--accent) 26%, transparent),
+          color-mix(in srgb, var(--accent-2) 20%, transparent)
+        );
+        color: var(--text);
+      }
+      .nav-item.active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 22%;
+        height: 56%;
+        width: 3px;
+        border-radius: 3px;
+        background: linear-gradient(var(--accent), var(--accent-2));
+      }
+      .sidebar-foot {
+        margin-top: auto;
+        padding: 14px 10px 4px;
+        font-size: 11.5px;
+        color: var(--muted);
+        line-height: 1.6;
+        border-top: 1px solid var(--border);
+      }
+      .sidebar-foot b {
+        color: var(--text);
+      }
+      .live-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        margin-right: 6px;
+        animation: pulse 1.6s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+        }
+        70% {
+          box-shadow: 0 0 0 9px rgba(16, 185, 129, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+      }
+
+      /* MAIN */
+      .main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 26px;
+        background: color-mix(in srgb, var(--bg) 78%, transparent);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+      }
+      .hamburger {
+        display: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 18px;
+        cursor: pointer;
+        place-items: center;
+      }
+      .titles {
+        flex: 1;
+        min-width: 0;
+      }
+      .titles h1 {
+        font-size: 20px;
+        letter-spacing: -0.4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .titles p {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .clock {
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        color: var(--muted);
+        padding: 8px 13px;
+        border-radius: 11px;
+        border: 1px solid var(--border);
+        background: var(--card);
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .avatar:hover {
+        transform: scale(1.07);
+      }
+      .icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 16px;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition:
+          transform 0.2s,
+          background 0.2s;
+      }
+      .icon-btn:hover {
+        transform: translateY(-2px);
+        background: var(--card-2);
+      }
+
+      /* VIEW */
+      .view {
+        padding: 24px 26px 60px;
+        flex: 1;
+      }
+      .page {
+        animation: pageIn 0.5s var(--ease) both;
+      }
+      @keyframes pageIn {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ============================================================
+   COMPONENTS
+   ============================================================ */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        transition:
+          transform 0.25s var(--ease),
+          box-shadow 0.25s,
+          border-color 0.25s;
+        animation: cardIn 0.55s var(--ease) both;
+      }
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px) scale(0.985);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .card:hover {
+        box-shadow: var(--shadow);
+        border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+      }
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .card-head h3 {
+        font-size: 15.5px;
+        letter-spacing: -0.2px;
+      }
+      .card-head .sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+      .stats {
+        grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+        margin-bottom: 18px;
+      }
+      .two-col {
+        grid-template-columns: 1.9fr 1fr;
+        margin-bottom: 18px;
+      }
+      .two-col-b {
+        grid-template-columns: 1.9fr 1fr;
+      }
+      @media (max-width: 1050px) {
+        .two-col,
+        .two-col-b {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .stat {
+        position: relative;
+        overflow: hidden;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        cursor: default;
+        box-shadow: var(--shadow-sm);
+        animation: cardIn 0.55s var(--ease) both;
+        transition:
+          transform 0.25s var(--ease),
+          box-shadow 0.25s;
+      }
+      .stat:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow);
+      }
+      .stat::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        pointer-events: none;
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--accent) 60%, transparent),
+          transparent 55%
+        );
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .stat:hover::after {
+        opacity: 1;
+      }
+      .stat-ico {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-size: 21px;
+        flex: 0 0 48px;
+      }
+      .stat-val {
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -0.6px;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.15;
+      }
+      .stat-lbl {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition:
+          transform 0.16s var(--ease),
+          box-shadow 0.2s,
+          filter 0.2s;
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.28);
+        white-space: nowrap;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.08);
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.38);
+      }
+      .btn:active {
+        transform: translateY(0) scale(0.97);
+      }
+      .btn-ghost {
+        background: var(--card);
+        border-color: var(--border);
+        color: var(--text);
+        box-shadow: none;
+      }
+      .btn-ghost:hover {
+        background: var(--card-2);
+        box-shadow: var(--shadow-sm);
+      }
+      .btn-green {
+        background: linear-gradient(135deg, #10b981, #059669);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+      }
+      .btn-red {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+      }
+      .btn-amber {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+      }
+      .btn-sm {
+        padding: 6px 11px;
+        font-size: 12px;
+        border-radius: 9px;
+        box-shadow: none;
+      }
+      .btn-block {
+        width: 100%;
+      }
+
+      .input,
+      .select,
+      textarea.input {
+        width: 100%;
+        padding: 11px 13px;
+        border-radius: 11px;
+        border: 1px solid var(--border);
+        background: var(--card-2);
+        color: var(--text);
+        font-size: 14px;
+        font-family: inherit;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s,
+          background 0.2s;
+        outline: none;
+      }
+      .input:focus,
+      .select:focus,
+      textarea.input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+      }
+      .select {
+        appearance: none;
+        background-image:
+          linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position:
+          calc(100% - 18px) 50%,
+          calc(100% - 13px) 50%;
+        background-size:
+          5px 5px,
+          5px 5px;
+        background-repeat: no-repeat;
+        padding-right: 34px;
+      }
+      label.fl {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      /* TOOLBAR */
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      .search {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+      }
+      .search input {
+        padding-left: 38px;
+      }
+      .search span {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        font-size: 14px;
+        pointer-events: none;
+      }
+      .toolbar .select {
+        width: auto;
+        min-width: 135px;
+      }
+
+      /* TABLES */
+      .table-wrap {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+      th,
+      td {
+        padding: 13px 14px;
+        text-align: left;
+        font-size: 13.5px;
+        white-space: nowrap;
+      }
+      thead th {
+        background: var(--card-2);
+        color: var(--muted);
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        font-weight: 700;
+        position: sticky;
+        top: 0;
+      }
+      tbody tr {
+        border-top: 1px solid var(--border);
+        transition:
+          background 0.18s,
+          transform 0.18s;
+      }
+      tbody tr:hover {
+        background: color-mix(in srgb, var(--accent) 6%, transparent);
+      }
+      td.num {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .person {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+      }
+      .pic {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        font-weight: 800;
+        color: #fff;
+        flex: 0 0 36px;
+        letter-spacing: 0.4px;
+      }
+      .person b {
+        display: block;
+        font-size: 13.5px;
+      }
+      .person small {
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+      }
+      .b-green {
+        background: color-mix(in srgb, var(--green) 18%, transparent);
+        color: var(--green);
+      }
+      .b-red {
+        background: color-mix(in srgb, var(--red) 18%, transparent);
+        color: var(--red);
+      }
+      .b-amber {
+        background: color-mix(in srgb, var(--amber) 18%, transparent);
+        color: var(--amber);
+      }
+      .b-blue {
+        background: color-mix(in srgb, var(--accent) 18%, transparent);
+        color: var(--accent);
+      }
+      .b-gray {
+        background: color-mix(in srgb, var(--muted) 18%, transparent);
+        color: var(--muted);
+      }
+
+      .row-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .empty {
+        padding: 48px 20px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .empty .big {
+        font-size: 38px;
+        margin-bottom: 10px;
+        opacity: 0.65;
+        display: block;
+        animation: floaty 3s ease-in-out infinite;
+      }
+
+      /* CHART: BARS */
+      .chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 190px;
+        padding-top: 10px;
+      }
+      .bar-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 100%;
+        gap: 7px;
+        min-width: 0;
+      }
+      .bar-val {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        text-align: center;
+        height: 14px;
+        font-variant-numeric: tabular-nums;
+      }
+      .bar-track {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--muted) 8%, transparent);
+      }
+      .bar-fill {
+        width: 100%;
+        border-radius: 9px 9px 5px 5px;
+        background: linear-gradient(180deg, var(--accent-2), var(--accent));
+        transform-origin: bottom;
+        animation: growBar 0.85s var(--ease) both;
+        box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent);
+        transition: filter 0.2s;
+      }
+      .bar-col:hover .bar-fill {
+        filter: brightness(1.25);
+      }
+      @keyframes growBar {
+        from {
+          transform: scaleY(0);
+        }
+        to {
+          transform: scaleY(1);
+        }
+      }
+      .bar-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+        font-weight: 600;
+      }
+
+      /* DONUT */
+      .donut-wrap {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .donut {
+        width: 150px;
+        height: 150px;
+        flex: 0 0 150px;
+        animation: popIn 0.8s var(--ease) both;
+      }
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: scale(0.75) rotate(-20deg);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .donut-center {
+        fill: var(--text);
+        font-size: 20px;
+        font-weight: 800;
+      }
+      .donut-center-sub {
+        fill: var(--muted);
+        font-size: 8.5px;
+        letter-spacing: 1.5px;
+      }
+      .legend {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        flex: 1;
+        min-width: 130px;
+      }
+      .legend div {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .legend i {
+        width: 9px;
+        height: 9px;
+        border-radius: 3px;
+        flex: 0 0 9px;
+      }
+      .legend b {
+        margin-left: auto;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* PLAN CARDS */
+      .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+        gap: 18px;
+      }
+      .plan {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+        animation: cardIn 0.55s var(--ease) both;
+        transition:
+          transform 0.3s var(--ease),
+          box-shadow 0.3s,
+          border-color 0.3s;
+      }
+      .plan:hover {
+        transform: translateY(-6px);
+        box-shadow: var(--shadow);
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      }
+      .plan.popular {
+        border-color: var(--accent);
+      }
+      .plan .tag {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 20px;
+        animation: pulseSoft 2.4s ease-in-out infinite;
+      }
+      @keyframes pulseSoft {
+        50% {
+          transform: scale(1.06);
+        }
+      }
+      .plan h4 {
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .plan .price {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        font-variant-numeric: tabular-nums;
+      }
+      .plan .price small {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+      .plan ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin: 4px 0;
+      }
+      .plan ul li {
+        font-size: 13px;
+        color: var(--muted);
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .plan ul li::before {
+        content: "✓";
+        color: var(--green);
+        font-weight: 800;
+      }
+      .plan .foot {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+      }
+      .plan .mem-count {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* WORKOUT */
+      .wk-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+      }
+      .wk {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        animation: cardIn 0.55s var(--ease) both;
+        transition:
+          transform 0.28s var(--ease),
+          box-shadow 0.28s,
+          border-color 0.28s;
+      }
+      .wk:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow);
+        border-color: color-mix(in srgb, var(--accent-2) 45%, var(--border));
+      }
+      .wk-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .wk h4 {
+        font-size: 15px;
+        line-height: 1.35;
+      }
+      .wk .desc {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .wk .pill {
+        font-size: 11.5px;
+        color: var(--muted);
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        padding: 4px 10px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        font-size: 11.5px;
+        padding: 4px 9px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      /* SETTINGS */
+      .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .setting-row:last-child {
+        border-bottom: none;
+      }
+      .setting-row b {
+        font-size: 14px;
+        display: block;
+      }
+      .setting-row p {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .segmented {
+        display: flex;
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 4px;
+        gap: 4px;
+      }
+      .segmented button {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        padding: 8px 15px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        transition: all 0.22s;
+      }
+      .segmented button.on {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      /* MODAL */
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(4, 8, 18, 0.62);
+        backdrop-filter: blur(6px);
+        animation: fadeIn 0.25s ease both;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .sheet {
+        width: 100%;
+        max-width: 560px;
+        max-height: 92vh;
+        overflow-y: auto;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        animation: sheetIn 0.38s var(--ease) both;
+      }
+      @keyframes sheetIn {
+        from {
+          opacity: 0;
+          transform: translateY(26px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .sheet-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px 22px 0;
+      }
+      .sheet-head h2 {
+        font-size: 18px;
+        letter-spacing: -0.3px;
+      }
+      .sheet-head p {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .sheet-body {
+        padding: 18px 22px 22px;
+      }
+      .sheet-foot {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 0 22px 22px;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      @media (max-width: 520px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .fg {
+        margin-bottom: 14px;
+      }
+
+      /* DRAWER */
+      .drawer-wrap {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(4, 8, 18, 0.55);
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.25s ease both;
+      }
+      .drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: min(460px, 100%);
+        background: var(--card);
+        border-left: 1px solid var(--border);
+        overflow-y: auto;
+        box-shadow: -24px 0 70px rgba(0, 0, 0, 0.45);
+        animation: drawerIn 0.4s var(--ease) both;
+      }
+      @keyframes drawerIn {
+        from {
+          transform: translateX(100%);
+        }
+        to {
+          transform: none;
+        }
+      }
+      .drawer-hero {
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--accent) 25%, transparent),
+          color-mix(in srgb, var(--accent-2) 18%, transparent)
+        );
+        border-bottom: 1px solid var(--border);
+        position: relative;
+      }
+      .drawer-hero .pic {
+        width: 58px;
+        height: 58px;
+        flex: 0 0 58px;
+        font-size: 20px;
+        border-radius: 16px;
+      }
+      .drawer-hero h2 {
+        font-size: 19px;
+      }
+      .drawer-hero small {
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .drawer-body {
+        padding: 20px 24px 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .kv div {
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .kv small {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 4px;
+      }
+      .kv b {
+        font-size: 13.5px;
+        font-weight: 700;
+      }
+      .mini-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .mini {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 13px;
+        border-radius: 11px;
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        font-size: 13px;
+        animation: cardIn 0.4s var(--ease) both;
+      }
+
+      /* TOASTS */
+      .toasts {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 400;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 330px;
+      }
+      .toast {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        padding: 13px 15px;
+        border-radius: 13px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        font-size: 13.5px;
+        animation: toastIn 0.4s var(--ease) both;
+        overflow: hidden;
+        position: relative;
+      }
+      .toast.out {
+        animation: toastOut 0.3s ease forwards;
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateX(60px) scale(0.94);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      @keyframes toastOut {
+        to {
+          opacity: 0;
+          transform: translateX(60px) scale(0.94);
+        }
+      }
+      .toast i {
+        font-style: normal;
+        font-size: 16px;
+        line-height: 1.2;
+      }
+      .toast b {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 1px;
+      }
+      .toast span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .toast::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 2px;
+        width: 100%;
+        transform-origin: left;
+        animation: toastBar 3.2s linear forwards;
+      }
+      .toast.ok::after {
+        background: var(--green);
+      }
+      .toast.err::after {
+        background: var(--red);
+      }
+      .toast.info::after {
+        background: var(--accent);
+      }
+      @keyframes toastBar {
+        from {
+          transform: scaleX(1);
+        }
+        to {
+          transform: scaleX(0);
+        }
+      }
+
+      /* SKELETON / MISC */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 14px 0;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .live-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 13px;
+        border-radius: 12px;
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        animation: cardIn 0.4s var(--ease) both;
+      }
+      .live-row .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .live-row b {
+        font-size: 13.5px;
+        display: block;
+      }
+      .live-row small {
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+      .timer {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--green);
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 900px) {
+        :root {
+          --sidebar-w: 250px;
+        }
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          z-index: 150;
+          transform: translateX(-100%);
+          box-shadow: 30px 0 80px rgba(0, 0, 0, 0.5);
+        }
+        body.nav-open .sidebar {
+          transform: translateX(0);
+        }
+        body.nav-open::after {
+          z-index: 99;
+        }
+        .overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 140;
+          backdrop-filter: blur(2px);
+          animation: fadeIn 0.25s ease both;
+        }
+        .hamburger {
+          display: grid;
+        }
+        .view {
+          padding: 18px 16px 60px;
+        }
+        .topbar {
+          padding: 12px 16px;
+          gap: 10px;
+        }
+        .clock {
+          display: none;
+        }
+        .titles h1 {
+          font-size: 17px;
+        }
+        .titles p {
+          display: none;
+        }
+        .stats {
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 12px;
+        }
+        .stat {
+          padding: 14px;
+          gap: 11px;
+        }
+        .stat-ico {
+          width: 40px;
+          height: 40px;
+          flex: 0 0 40px;
+          font-size: 18px;
+          border-radius: 12px;
+        }
+        .stat-val {
+          font-size: 20px;
+        }
+        .stat-lbl {
+          font-size: 11px;
+        }
+        .toasts {
+          left: 12px;
+          right: 12px;
+          max-width: none;
+          top: 12px;
+        }
+        .card {
+          padding: 15px;
+          border-radius: 14px;
+        }
+        .chart {
+          height: 160px;
+          gap: 6px;
+        }
+        .bar-val {
+          font-size: 9.5px;
+        }
+        .toolbar {
+          gap: 9px;
+        }
+        .toolbar .select {
+          flex: 1;
+          min-width: 0;
+        }
+        .search {
+          flex: 1 1 100%;
+        }
+      }
+      @media (max-width: 520px) {
+        .titles h1 {
+          font-size: 16px;
+        }
+        .topbar-actions .avatar {
+          width: 36px;
+          height: 36px;
+        }
+        .sheet {
+          border-radius: 18px;
+        }
+        .plan-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-logo">🏋️</div>
+          <div class="brand-txt">
+            <b>Shape & Size</b><span>Sinsou Production</span>
+          </div>
+        </div>
+        <nav class="nav" id="nav">
+          <button
+            class="nav-item active"
+            data-action="nav"
+            data-page="dashboard"
+          >
+            <i>📊</i> Dashboard
+          </button>
+          <button class="nav-item" data-action="nav" data-page="members">
+            <i>👥</i> Members
+          </button>
+          <button class="nav-item" data-action="nav" data-page="attendance">
+            <i>✅</i> Attendance
+          </button>
+          <button class="nav-item" data-action="nav" data-page="payments">
+            <i>💰</i> Payments
+          </button>
+          <button class="nav-item" data-action="nav" data-page="plans">
+            <i>📋</i> Plans
+          </button>
+          <button class="nav-item" data-action="nav" data-page="workouts">
+            <i>💪</i> Workouts
+          </button>
+          <button class="nav-item" data-action="nav" data-page="settings">
+            <i>⚙️</i> Settings
+          </button>
+        </nav>
+        <div class="sidebar-foot">
+          <div>
+            <span class="live-dot"></span><b id="liveCount">0</b> members in gym
+          </div>
+          <div style="margin-top: 6px">Local data · auto-saved</div>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <div class="main">
+        <header class="topbar">
+          <button class="hamburger" data-action="toggle-nav" aria-label="Menu">
+            ☰
+          </button>
+          <div class="titles">
+            <h1 id="pageTitle">Dashboard</h1>
+            <p id="pageSub">Overview of your gym performance</p>
+          </div>
+          <div class="topbar-actions">
+            <div class="clock" id="clock">--:--</div>
+            <button
+              class="icon-btn"
+              data-action="theme"
+              id="themeBtn"
+              title="Toggle theme"
+            >
+              🌙
+            </button>
+            <div
+              class="avatar"
+              data-action="nav"
+              data-page="settings"
+              title="Settings"
+            >
+              SG
+            </div>
+          </div>
+        </header>
+        <main class="view" id="view"></main>
+      </div>
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+    <div id="modalRoot"></div>
+    <input
+      type="file"
+      id="importFile"
+      accept="application/json"
+      style="display: none"
+    />
+
+    <script>
+      /* ============================================================
+   0. UTILITIES
+   ============================================================ */
+      const $ = (s, r = document) => r.querySelector(s);
+      const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+      const esc = (v) =>
+        String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      const uid = () =>
+        Math.random().toString(36).slice(2, 8) +
+        Date.now().toString(36).slice(-4);
+      const pad = (n) => String(n).padStart(2, "0");
+      const isoDate = (d = new Date()) =>
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const isoNow = (d = new Date()) =>
+        `${isoDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const parseDate = (s) => {
+        const [y, m, d] = String(s).slice(0, 10).split("-").map(Number);
+        return new Date(y, (m || 1) - 1, d || 1);
+      };
+      const money = (n) => "₹" + Number(n || 0).toLocaleString("en-IN");
+      const shortMoney = (n) =>
+        Number(n) >= 1000
+          ? "₹" +
+            (Number(n) / 1000).toFixed(Number(n) % 1000 === 0 ? 0 : 1) +
+            "k"
+          : "₹" + n;
+      const monthKey = (d = new Date()) =>
+        `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+      const MONTHS = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const monthLabel = (key) => MONTHS[Number(key.split("-")[1]) - 1] || key;
+      const hashHue = (str) => {
+        let h = 0;
+        for (const ch of str) h = (h * 31 + ch.charCodeAt(0)) % 360;
+        return h;
+      };
+      const initials = (name) =>
+        name
+          .trim()
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase();
+      const avatarStyle = (name) => {
+        const h = hashHue(name);
+        return `background:linear-gradient(135deg,hsl(${h} 72% 55%),hsl(${(h + 55) % 360} 72% 46%))`;
+      };
+      function ago(iso) {
+        if (!iso) return "—";
+        const diff =
+          Date.now() - new Date(String(iso).replace(" ", "T")).getTime();
+        const m = Math.floor(diff / 60000);
+        if (m < 1) return "just now";
+        if (m < 60) return m + "m ago";
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + "h ago";
+        const d = Math.floor(h / 24);
+        if (d < 30) return d + "d ago";
+        return Math.floor(d / 30) + "mo ago";
+      }
+      function elapsed(iso) {
+        const s = Math.max(
+          0,
+          Math.floor(
+            (Date.now() - new Date(String(iso).replace(" ", "T")).getTime()) /
+              1000,
+          ),
+        );
+        return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+      }
+
+      /* ============================================================
+   1. STATE
+   ============================================================ */
+      const KEY = "gympro.v2";
+
+      function defaultPlans() {
+        return [
+          {
+            id: "plan_basic",
+            name: "Basic",
+            price: 600,
+            duration: "1 Month",
+            days: 30,
+            color: "#3b82f6",
+            features: ["Gym Access", "Locker Room"],
+          },
+          {
+            id: "plan_standard",
+            name: "Standard",
+            price: 1600,
+            duration: "3 Month",
+            days: 91,
+            color: "#8b5cf6",
+            popular: true,
+            features: ["Gym Access", "Locker Room", "Group Classes"],
+          },
+          {
+            id: "plan_premium",
+            name: "Premium",
+            price: 2900,
+            duration: "6 Month",
+            days: 183,
+            color: "#f59e0b",
+            features: [
+              "Gym Access",
+              "Locker Room",
+              "Group Classes",
+              "Personal Trainer",
+            ],
+          },
+          {
+            id: "plan_yearly",
+            name: "Yearly",
+            price: 5500,
+            duration: "12 Months",
+            days: 365,
+            color: "#10b981",
+            features: ["Everything Included", "Priority Support"],
+          },
+        ];
+      }
+
+      function seedDemo() {
+        const plans = defaultPlans();
+        const today = new Date();
+        const people = [
+          [
+            "Sourabh Singh",
+            "9876543210",
+            "sourabh@mail.com",
+            29,
+            "Male",
+            "plan_premium",
+            96,
+            4,
+          ],
+          [
+            "Priya Sharma",
+            "9812345670",
+            "priya@mail.com",
+            24,
+            "Female",
+            "plan_standard",
+            12,
+            2,
+          ],
+          [
+            "Rahul Verma",
+            "9900112233",
+            "rahul@mail.com",
+            32,
+            "Male",
+            "plan_yearly",
+            214,
+            8,
+          ],
+          [
+            "Ananya Iyer",
+            "9765432109",
+            "ananya@mail.com",
+            27,
+            "Female",
+            "plan_basic",
+            5,
+            1,
+          ],
+          [
+            "Karan Mehta",
+            "9845012345",
+            "karan@mail.com",
+            35,
+            "Male",
+            "plan_standard",
+            151,
+            5,
+          ],
+          [
+            "Sneha Patil",
+            "9654321098",
+            "sneha@mail.com",
+            31,
+            "Female",
+            "plan_premium",
+            22,
+            3,
+          ],
+          [
+            "Arjun Nair",
+            "9123456789",
+            "arjun@mail.com",
+            26,
+            "Male",
+            "plan_basic",
+            70,
+            1,
+          ],
+          [
+            "Neha Gupta",
+            "9988776655",
+            "neha@mail.com",
+            23,
+            "Female",
+            "plan_standard",
+            45,
+            2,
+          ],
+        ];
+
+        const members = [],
+          payments = [];
+        people.forEach(
+          ([name, phone, email, age, gender, planId, joinedAgo, months], i) => {
+            const plan = plans.find((p) => p.id === planId);
+            const join = new Date(today);
+            join.setDate(join.getDate() - joinedAgo);
+            const lastPay = new Date(today);
+            lastPay.setDate(lastPay.getDate() - (i % 6));
+            const id = "m" + (i + 1);
+            members.push({
+              id,
+              name,
+              phone,
+              email,
+              age,
+              gender,
+              planId,
+              status: i === 6 ? "inactive" : "active",
+              checkedIn: i === 1 || i === 4,
+              joinDate: isoDate(join),
+              lastPayment: isoDate(lastPay),
+            });
+            for (let k = 0; k < months; k++) {
+              const d = new Date(today);
+              d.setDate(d.getDate() - (k * 30 + (i % 6)));
+              if (d < join) continue;
+              payments.push({
+                id: uid(),
+                memberId: id,
+                memberName: name,
+                amount: plan.price,
+                planId,
+                method: ["Cash", "UPI", "Card"][k % 3],
+                date: isoDate(d),
+              });
+            }
+          },
+        );
+
+        const attendance = [
+          {
+            id: uid(),
+            memberId: "m2",
+            memberName: "Priya Sharma",
+            checkIn: isoNow(new Date(Date.now() - 42 * 60000)),
+            checkOut: null,
+          },
+          {
+            id: uid(),
+            memberId: "m5",
+            memberName: "Karan Mehta",
+            checkIn: isoNow(new Date(Date.now() - 12 * 60000)),
+            checkOut: null,
+          },
+        ];
+        const y = new Date(Date.now() - 86400000);
+        attendance.push({
+          id: uid(),
+          memberId: "m1",
+          memberName: "Sourabh Singh",
+          checkIn: isoDate(y) + " 07:12",
+          checkOut: isoDate(y) + " 08:34",
+        });
+        attendance.push({
+          id: uid(),
+          memberId: "m3",
+          memberName: "Rahul Verma",
+          checkIn: isoDate(y) + " 18:05",
+          checkOut: isoDate(y) + " 19:20",
+        });
+
+        return {
+          members,
+          payments,
+          plans,
+          attendance,
+          workouts: [
+            {
+              id: uid(),
+              name: "Beginner Full Body",
+              memberId: "m4",
+              description: "3 days a week, compound movements focus",
+              exercises: ["Squats 3x12", "Bench 3x10", "Rows 3x12"],
+            },
+            {
+              id: uid(),
+              name: "Fat Loss HIIT",
+              memberId: "m2",
+              description: "High intensity intervals + core work",
+              exercises: ["Burpees 4x20s", "Mountain Climbers", "Plank 3x45s"],
+            },
+            {
+              id: uid(),
+              name: "Strength Split",
+              memberId: "m3",
+              description: "Push / Pull / Legs rotation for strength",
+              exercises: ["Deadlift 5x5", "OHP 4x8", "Pull-ups 4x6"],
+            },
+          ],
+          settings: { theme: "dark" },
+          version: 2,
+        };
+      }
+
+      function loadDB() {
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.members)) return parsed;
+          }
+        } catch (e) {
+          console.warn("Corrupt storage, reseeding.", e);
+        }
+        const fresh = seedDemo();
+        localStorage.setItem(KEY, JSON.stringify(fresh));
+        return fresh;
+      }
+
+      let db = loadDB();
+      const save = () => localStorage.setItem(KEY, JSON.stringify(db));
+
+      /* ---- derived helpers ---- */
+      const planOf = (id) => db.plans.find((p) => p.id === id);
+      const memberOf = (id) => db.members.find((m) => m.id === id);
+      const startOfToday = () => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+      };
+
+      function expiresOn(m) {
+        const p = planOf(m.planId);
+        if (!p || !m.lastPayment) return null;
+        const d = parseDate(m.lastPayment);
+        d.setDate(d.getDate() + (p.days || 30));
+        return d;
+      }
+      function daysLeft(m) {
+        const e = expiresOn(m);
+        if (!e) return null;
+        return Math.ceil((e - startOfToday()) / 86400000);
+      }
+      function memberStatus(m) {
+        if (m.status === "inactive")
+          return { cls: "b-gray", label: "Inactive" };
+        if (m.checkedIn) return { cls: "b-green", label: "In Gym" };
+        const d = daysLeft(m);
+        if (d === null) return { cls: "b-blue", label: "Active" };
+        if (d < 0) return { cls: "b-red", label: "Expired" };
+        if (d <= 7) return { cls: "b-amber", label: "Expiring" };
+        return { cls: "b-green", label: "Active" };
+      }
+      const revenueForMonth = (key) =>
+        db.payments
+          .filter((p) => (p.date || "").startsWith(key))
+          .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+      /* ============================================================
+   2. TOASTS / MODAL / CONFIRM
+   ============================================================ */
+      function toast(msg, type = "info", title) {
+        const host = $("#toasts");
+        const el = document.createElement("div");
+        el.className = "toast " + type;
+        const icon = type === "ok" ? "✅" : type === "err" ? "⚠️" : "ℹ️";
+        el.innerHTML = `<i>${icon}</i><div><b>${esc(title || (type === "ok" ? "Success" : type === "err" ? "Something went wrong" : "Info"))}</b><span>${esc(msg)}</span></div>`;
+        host.appendChild(el);
+        const kill = () => {
+          el.classList.add("out");
+          setTimeout(() => el.remove(), 320);
+        };
+        el.addEventListener("click", kill);
+        setTimeout(kill, 3200);
+      }
+
+      function closeModal() {
+        const root = $("#modalRoot");
+        if (!root.firstElementChild) return;
+        const bd = root.firstElementChild;
+        bd.style.animation = "fadeIn .2s ease reverse both";
+        setTimeout(() => {
+          root.innerHTML = "";
+        }, 160);
+      }
+
+      function openModal({
+        title,
+        sub = "",
+        body,
+        submitLabel = "Save",
+        onSubmit,
+        wide = false,
+      }) {
+        const root = $("#modalRoot");
+        root.innerHTML = `
+    <div class="backdrop" data-close>
+      <div class="sheet" role="dialog" aria-modal="true" style="${wide ? "max-width:720px" : ""}">
+        <div class="sheet-head">
+          <div><h2>${esc(title)}</h2>${sub ? `<p>${esc(sub)}</p>` : ""}</div>
+          <button class="icon-btn" data-action="close-modal" style="width:34px;height:34px;font-size:13px">✕</button>
+        </div>
+        <form id="modalForm" novalidate>
+          <div class="sheet-body">${body}</div>
+          <div class="sheet-foot">
+            <button type="button" class="btn btn-ghost" data-action="close-modal">Cancel</button>
+            <button type="submit" class="btn">${esc(submitLabel)}</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+        const form = $("#modalForm");
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const res = onSubmit(Object.fromEntries(new FormData(form)), form);
+          if (res !== false) closeModal();
+        });
+        const first = form.querySelector("input,select,textarea");
+        if (first && window.matchMedia("(min-width:700px)").matches)
+          setTimeout(() => first.focus(), 220);
+      }
+
+      function confirmDialog(message, okLabel = "Delete") {
+        return new Promise((resolve) => {
+          openModal({
+            title: "Are you sure?",
+            sub: "This action cannot be undone.",
+            body: `<p style="font-size:14px;line-height:1.65;color:var(--muted)">${esc(message)}</p>`,
+            submitLabel: okLabel,
+            onSubmit: () => {
+              resolve(true);
+            },
+          });
+          const foot = $("#modalRoot .sheet-foot .btn");
+          if (foot) {
+            foot.classList.remove("btn");
+            foot.classList.add("btn", "btn-red");
+          }
+          // if closed without confirming, resolve false
+          const obs = new MutationObserver(() => {
+            if (!$("#modalRoot").firstElementChild) {
+              obs.disconnect();
+              resolve(false);
+            }
+          });
+          obs.observe($("#modalRoot"), { childList: true });
+        });
+      }
+
+      function drawMemberDrawer(id) {
+        /* replaced below by openDrawer */
+      }
+
+      function openDrawer(html) {
+        const root = $("#modalRoot");
+        root.innerHTML = `<div class="drawer-wrap" data-close><div class="drawer" style="animation:drawerIn .4s var(--ease) both">${html}</div></div>`;
+      }
+
+      /* ============================================================
+   3. PAGES
+   ============================================================ */
+      const App = {
+        page: "dashboard",
+        q: "",
+        status: "all",
+        sort: "recent",
+        payFilter: "all",
+        attFilter: "all",
+      };
+
+      const PAGES = {
+        dashboard: {
+          title: "Dashboard",
+          sub: "Overview of your gym performance",
+          render: renderDashboard,
+        },
+        members: {
+          title: "Members",
+          sub: "Manage all your gym members",
+          render: renderMembers,
+        },
+        attendance: {
+          title: "Attendance",
+          sub: "Live check-in and check-out tracking",
+          render: renderAttendance,
+        },
+        payments: {
+          title: "Payments",
+          sub: "Revenue and payment records",
+          render: renderPayments,
+        },
+        plans: {
+          title: "Plans",
+          sub: "Membership plans and pricing",
+          render: renderPlans,
+        },
+        workouts: {
+          title: "Workouts",
+          sub: "Assign and manage workout programs",
+          render: renderWorkouts,
+        },
+        settings: {
+          title: "Settings",
+          sub: "Appearance, data and preferences",
+          render: renderSettings,
+        },
+      };
+
+      function go(page) {
+        if (!PAGES[page]) page = "dashboard";
+        App.page = page;
+        $$(".nav-item").forEach((n) =>
+          n.classList.toggle("active", n.dataset.page === page),
+        );
+        $("#pageTitle").textContent = PAGES[page].title;
+        $("#pageSub").textContent = PAGES[page].sub;
+        const view = $("#view");
+        view.innerHTML = `<div class="page"><div id="pageInner">${PAGES[page].render()}</div></div>`;
+        if (window.innerWidth <= 900)
+          document.body.classList.remove("nav-open");
+        document.body.classList.toggle("nav-open", false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (page === "dashboard") animateCounters();
+        updateLiveCount();
+      }
+
+      function rerender() {
+        go(App.page);
+      }
+
+      /* ---------- DASHBOARD ---------- */
+      function renderDashboard() {
+        const total = db.members.length;
+        const active = db.members.filter((m) => m.status !== "inactive").length;
+        const inGym = db.members.filter((m) => m.checkedIn).length;
+        const monthRev = revenueForMonth(monthKey());
+        const prevKey = (() => {
+          const d = new Date();
+          d.setMonth(d.getMonth() - 1);
+          return monthKey(d);
+        })();
+        const prevRev = revenueForMonth(prevKey);
+        const growth = prevRev
+          ? Math.round(((monthRev - prevRev) / prevRev) * 100)
+          : monthRev
+            ? 100
+            : 0;
+        const todayIn = db.attendance.filter((a) =>
+          (a.checkIn || "").startsWith(isoDate()),
+        ).length;
+        const expiring = db.members.filter((m) => {
+          const d = daysLeft(m);
+          return d !== null && d >= 0 && d <= 7 && m.status !== "inactive";
+        });
+
+        const stats = [
+          [
+            "👥",
+            "Total Members",
+            total,
+            "",
+            "var(--accent)",
+            "rgba(59,130,246,.15)",
+            "members",
+          ],
+          [
+            "⚡",
+            "Active Members",
+            active,
+            "",
+            "var(--green)",
+            "rgba(16,185,129,.15)",
+            "members",
+          ],
+          [
+            "🏋️",
+            "In Gym Now",
+            inGym,
+            "",
+            "var(--amber)",
+            "rgba(245,158,11,.15)",
+            "attendance",
+          ],
+          [
+            "💰",
+            "This Month",
+            monthRev,
+            "₹",
+            "var(--accent-2)",
+            "rgba(139,92,246,.15)",
+            "payments",
+          ],
+        ];
+
+        const recent = [...db.members].slice(-5).reverse();
+
+        return `
+  <div class="grid stats">
+    ${stats
+      .map(
+        ([ico, lbl, val, pre, color, bg, page], i) => `
+      <div class="stat" style="animation-delay:${i * 70}ms" data-action="nav" data-page="${page}">
+        <div class="stat-ico" style="background:${bg};color:${color}">${ico}</div>
+        <div style="min-width:0">
+          <div class="stat-val"><span class="count" data-to="${val}" data-prefix="${pre}">0</span></div>
+          <div class="stat-lbl">${lbl}</div>
+        </div>
+      </div>`,
+      )
+      .join("")}
+  </div>
+
+  <div class="grid two-col">
+    <div class="card" style="animation-delay:.2s">
+      <div class="card-head">
+        <div><h3>Revenue — last 6 months</h3><div class="sub">${growth >= 0 ? "▲" : "▼"} ${Math.abs(growth)}% vs last month · ${monthRev ? money(monthRev) : "No revenue"} this month</div></div>
+        <span class="badge ${growth >= 0 ? "b-green" : "b-red"}">${growth >= 0 ? "+" : ""}${growth}%</span>
+      </div>
+      ${renderBarChart()}
+    </div>
+    <div class="card" style="animation-delay:.28s">
+      <div class="card-head"><div><h3>Plan split</h3><div class="sub">Members per plan</div></div></div>
+      ${renderDonut()}
+    </div>
+  </div>
+
+  <div class="grid two-col-b">
+    <div class="card" style="animation-delay:.34s">
+      <div class="card-head">
+        <div><h3>Recent members</h3><div class="sub">Latest additions to your gym</div></div>
+        <button class="btn btn-sm btn-ghost" data-action="nav" data-page="members">View all →</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Member</th><th>Plan</th><th>Status</th><th>Check-ins today</th><th></th></tr></thead>
+          <tbody>
+            ${
+              recent.length
+                ? recent
+                    .map((m, i) => {
+                      const p = planOf(m.planId),
+                        st = memberStatus(m);
+                      const todayCount = db.attendance.filter(
+                        (a) =>
+                          a.memberId === m.id &&
+                          (a.checkIn || "").startsWith(isoDate()),
+                      ).length;
+                      return `<tr style="animation:cardIn .4s var(--ease) both;animation-delay:${i * 50}ms">
+                <td><div class="person"><div class="pic" style="${avatarStyle(m.name)}">${esc(initials(m.name))}</div><div><b>${esc(m.name)}</b><small>${esc(m.phone)}</small></div></div></td>
+                <td>${p ? `<span class="chip" style="background:color-mix(in srgb,${p.color} 16%,transparent);color:${p.color}">${esc(p.name)}</span>` : "—"}</td>
+                <td><span class="badge ${st.cls}">${st.label}</span></td>
+                <td class="num">${todayCount}</td>
+                <td><button class="btn btn-sm btn-ghost" data-action="view-member" data-id="${m.id}">Open</button></td>
+              </tr>`;
+                    })
+                    .join("")
+                : `<tr><td colspan="5"><div class="empty"><span class="big">👥</span>No members yet. Add your first member!</div></td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="animation-delay:.4s">
+      <div class="card-head"><div><h3>Needs attention</h3><div class="sub">Expiring within 7 days</div></div></div>
+      ${
+        expiring.length
+          ? `<div class="mini-list">
+        ${expiring
+          .slice(0, 5)
+          .map((m) => {
+            const d = daysLeft(m),
+              p = planOf(m.planId);
+            return `<div class="mini">
+            <div class="person" style="gap:9px"><div class="pic" style="width:30px;height:30px;flex:0 0 30px;font-size:11px;${avatarStyle(m.name)}">${esc(initials(m.name))}</div>
+            <div><b style="font-size:13px">${esc(m.name)}</b><small style="color:var(--muted);font-size:11px">${p ? esc(p.name) : "—"}</small></div></div>
+            <span class="badge ${d <= 3 ? "b-red" : "b-amber"}">${d === 0 ? "today" : d + "d left"}</span>
+          </div>`;
+          })
+          .join("")}
+      </div>`
+          : `<div class="empty" style="padding:30px 10px"><span class="big">✨</span>All memberships are up to date</div>`
+      }
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)">
+        <span>Today's check-ins</span><b style="color:var(--text)">${todayIn}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:8px">
+        <span>Total payments recorded</span><b style="color:var(--text)">${db.payments.length}</b>
+      </div>
+    </div>
+  </div>`;
+      }
+
+      function renderBarChart() {
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          months.push(monthKey(d));
+        }
+        const vals = months.map(revenueForMonth);
+        const max = Math.max(...vals, 1);
+        return `<div class="chart">
+    ${months
+      .map((k, i) => {
+        const v = vals[i];
+        const h = Math.max(4, Math.round((v / max) * 100));
+        return `<div class="bar-col" title="${monthLabel(k)} ${k.split("-")[0]}: ${money(v)}">
+        <div class="bar-val">${v ? shortMoney(v) : ""}</div>
+        <div class="bar-track"><div class="bar-fill" style="height:${h}%;animation-delay:${i * 80}ms"></div></div>
+        <div class="bar-label">${monthLabel(k)}</div>
+      </div>`;
+      })
+      .join("")}
+  </div>`;
+      }
+
+      function renderDonut() {
+        const rows = db.plans.map((p) => ({
+          p,
+          n: db.members.filter((m) => m.planId === p.id).length,
+        }));
+        const total = rows.reduce((s, r) => s + r.n, 0) || 1;
+        const r = 54,
+          C = 2 * Math.PI * r;
+        let offset = 0;
+        const segs = rows
+          .map((row) => {
+            const len = (row.n / total) * C;
+            const seg =
+              len > 0
+                ? `<circle cx="60" cy="60" r="${r}" fill="none" stroke="${row.p.color}" stroke-width="15"
+           stroke-dasharray="${len - 2} ${C - len + 2}" stroke-dashoffset="${-offset}"
+           transform="rotate(-90 60 60)" style="transition:opacity .3s"/>`
+                : "";
+            offset += len;
+            return seg;
+          })
+          .join("");
+
+        return `<div class="donut-wrap">
+    <svg class="donut" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="${r}" fill="none" stroke="color-mix(in srgb,var(--muted) 15%,transparent)" stroke-width="15"/>
+      ${segs}
+      <text x="60" y="58" text-anchor="middle" class="donut-center">${total}</text>
+      <text x="60" y="73" text-anchor="middle" class="donut-center-sub">MEMBERS</text>
+    </svg>
+    <div class="legend">
+      ${rows.map((row) => `<div><i style="background:${row.p.color}"></i>${esc(row.p.name)}<b>${row.n}</b></div>`).join("")}
+    </div>
+  </div>`;
+      }
+
+      function animateCounters() {
+        $$(".count").forEach((el) => {
+          const to = Number(el.dataset.to) || 0;
+          const pre = el.dataset.prefix || "";
+          const dur = 900,
+            start = performance.now();
+          const step = (now) => {
+            const t = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - t, 3);
+            el.textContent =
+              pre + Math.round(to * eased).toLocaleString("en-IN");
+            if (t < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        });
+      }
+
+      /* ---------- MEMBERS ---------- */
+      function filteredMembers() {
+        const q = App.q.trim().toLowerCase();
+        let list = db.members.filter((m) => {
+          const matchQ =
+            !q ||
+            m.name.toLowerCase().includes(q) ||
+            m.phone.includes(q) ||
+            (m.email || "").toLowerCase().includes(q);
+          const st = memberStatus(m);
+          const matchS =
+            App.status === "all" ||
+            (App.status === "active" &&
+              m.status !== "inactive" &&
+              (daysLeft(m) === null || daysLeft(m) >= 0)) ||
+            (App.status === "expired" &&
+              daysLeft(m) !== null &&
+              daysLeft(m) < 0) ||
+            (App.status === "inactive" && m.status === "inactive") ||
+            (App.status === "in" && m.checkedIn);
+          return matchQ && matchS;
+        });
+        const sorters = {
+          recent: (a, b) => (b.joinDate || "").localeCompare(a.joinDate || ""),
+          name: (a, b) => a.name.localeCompare(b.name),
+          expiry: (a, b) => (daysLeft(a) ?? 9999) - (daysLeft(b) ?? 9999),
+          plan: (a, b) =>
+            (planOf(a.planId)?.price || 0) - (planOf(b.planId)?.price || 0),
+        };
+        return list.sort(sorters[App.sort] || sorters.recent);
+      }
+
+      function memberRows() {
+        const list = filteredMembers();
+        if (!list.length) {
+          return `<tr><td colspan="6"><div class="empty"><span class="big">🔍</span>No members match your filters</div></td></tr>`;
+        }
+        return list
+          .map((m, i) => {
+            const p = planOf(m.planId),
+              st = memberStatus(m),
+              d = daysLeft(m);
+            const expiry =
+              d === null
+                ? "—"
+                : d < 0
+                  ? `<span class="badge b-red">${Math.abs(d)}d overdue</span>`
+                  : `${d}d left`;
+            return `<tr style="animation:cardIn .35s var(--ease) both;animation-delay:${Math.min(i * 35, 350)}ms">
+      <td><div class="person">
+        <div class="pic" style="${avatarStyle(m.name)}">${esc(initials(m.name))}</div>
+        <div><b>${esc(m.name)}</b><small>${esc(m.email || m.phone)}</small></div>
+      </div></td>
+      <td>${esc(m.phone)}</td>
+      <td>${p ? `<span class="chip" style="background:color-mix(in srgb,${p.color} 16%,transparent);color:${p.color}">${esc(p.name)}</span>` : "—"}</td>
+      <td><span class="badge ${st.cls}">${m.checkedIn ? '<span class="live-dot" style="width:5px;height:5px"></span>' : ""}${st.label}</span></td>
+      <td class="num" style="color:var(--muted)">${esc(m.joinDate || "—")}</td>
+      <td>${expiry}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-sm btn-ghost" data-action="view-member" data-id="${m.id}" title="View">👁</button>
+        <button class="btn btn-sm btn-ghost" data-action="edit-member" data-id="${m.id}" title="Edit">✏️</button>
+        <button class="btn btn-sm btn-red" data-action="del-member" data-id="${m.id}" title="Delete">🗑</button>
+      </div></td>
+    </tr>`;
+          })
+          .join("");
+      }
+
+      function renderMembers() {
+        return `
+  <div class="card" style="margin-bottom:18px">
+    <div class="toolbar" style="margin-bottom:0">
+      <div class="search">
+        <span>🔍</span>
+        <input class="input" id="memberSearch" placeholder="Search by name, phone or email… (Ctrl + K)" value="${esc(App.q)}">
+      </div>
+      <select class="select" data-select="status">
+        <option value="all"     ${App.status === "all" ? "selected" : ""}>All statuses</option>
+        <option value="active"  ${App.status === "active" ? "selected" : ""}>Active</option>
+        <option value="in"      ${App.status === "in" ? "selected" : ""}>In gym</option>
+        <option value="expired" ${App.status === "expired" ? "selected" : ""}>Expired</option>
+        <option value="inactive"${App.status === "inactive" ? "selected" : ""}>Inactive</option>
+      </select>
+      <select class="select" data-select="sort">
+        <option value="recent" ${App.sort === "recent" ? "selected" : ""}>Newest first</option>
+        <option value="name"   ${App.sort === "name" ? "selected" : ""}>Name A–Z</option>
+        <option value="expiry" ${App.sort === "expiry" ? "selected" : ""}>Expiring soon</option>
+        <option value="plan"   ${App.sort === "plan" ? "selected" : ""}>Plan value</option>
+      </select>
+      <button class="btn" data-action="add-member">＋ Add Member</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div><h3>All members</h3><div class="sub" id="memberCount">${filteredMembers().length} of ${db.members.length} shown</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Member</th><th>Phone</th><th>Plan</th><th>Status</th><th>Joined</th><th>Expiry</th><th>Actions</th></tr></thead>
+        <tbody id="memberRows">${memberRows()}</tbody>
+      </table>
+    </div>
+  </div>`;
+      }
+
+      function refreshMemberRows() {
+        const body = $("#memberRows");
+        if (!body) return;
+        body.innerHTML = memberRows();
+        const c = $("#memberCount");
+        if (c)
+          c.textContent = `${filteredMembers().length} of ${db.members.length} shown`;
+      }
+
+      /* ---------- ATTENDANCE ---------- */
+      function renderAttendance() {
+        const inGym = db.members.filter((m) => m.checkedIn);
+        const history = [...db.attendance]
+          .filter(
+            (a) =>
+              App.attFilter === "all" ||
+              (a.checkIn || "").startsWith(isoDate()),
+          )
+          .sort((a, b) => (b.checkIn || "").localeCompare(a.checkIn || ""));
+
+        return `
+  <div class="grid two-col" style="margin-bottom:18px">
+    <div class="card">
+      <div class="card-head"><div><h3>Quick check-in</h3><div class="sub">Mark a member as present</div></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <select class="select" id="ciSelect" style="flex:1;min-width:180px">
+          <option value="">Select member…</option>
+          ${db.members
+            .filter((m) => !m.checkedIn && m.status !== "inactive")
+            .map((m) => `<option value="${m.id}">${esc(m.name)}</option>`)
+            .join("")}
+        </select>
+        <button class="btn btn-green" data-action="checkin">✅ Check In</button>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="hint">Today's check-ins: <b style="color:var(--text)">${db.attendance.filter((a) => (a.checkIn || "").startsWith(isoDate())).length}</b></div>
+        <button class="btn btn-sm btn-ghost" data-action="nav" data-page="members">Manage members →</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div><h3>Currently in gym</h3><div class="sub">${inGym.length} active session${inGym.length === 1 ? "" : "s"}</div></div>
+        <span class="badge b-green"><span class="live-dot" style="width:5px;height:5px"></span>LIVE</span>
+      </div>
+      <div class="mini-list">
+        ${
+          inGym.length
+            ? inGym
+                .map((m) => {
+                  const rec = db.attendance.find(
+                    (a) => a.memberId === m.id && !a.checkOut,
+                  );
+                  return `<div class="live-row">
+            <div class="pic" style="width:32px;height:32px;flex:0 0 32px;font-size:11px;${avatarStyle(m.name)}">${esc(initials(m.name))}</div>
+            <div class="grow"><b>${esc(m.name)}</b><small>since ${rec ? rec.checkIn.slice(11) : "—"}</small></div>
+            <div class="timer" ${rec ? `data-since="${rec.checkIn}"` : ""}>00:00:00</div>
+            <button class="btn btn-sm btn-red" data-action="checkout" data-id="${m.id}">Out</button>
+          </div>`;
+                })
+                .join("")
+            : `<div class="empty" style="padding:26px 10px"><span class="big">🧘</span>Nobody is in the gym right now</div>`
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div><h3>Attendance history</h3><div class="sub">${history.length} record${history.length === 1 ? "" : "s"}</div></div>
+      <select class="select" data-select="attFilter" style="width:auto">
+        <option value="all"   ${App.attFilter === "all" ? "selected" : ""}>All time</option>
+        <option value="today" ${App.attFilter === "today" ? "selected" : ""}>Today</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Member</th><th>Check in</th><th>Check out</th><th>Duration</th><th>Status</th></tr></thead>
+        <tbody>
+          ${
+            history.length
+              ? history
+                  .slice(0, 60)
+                  .map((a) => {
+                    const dur = a.checkOut
+                      ? Math.max(
+                          1,
+                          Math.round(
+                            (new Date(a.checkOut.replace(" ", "T")) -
+                              new Date(a.checkIn.replace(" ", "T"))) /
+                              60000,
+                          ),
+                        )
+                      : null;
+                    return `<tr>
+              <td><b>${esc(a.memberName)}</b></td>
+              <td class="num">${esc(a.checkIn)}</td>
+              <td class="num">${a.checkOut ? esc(a.checkOut) : "—"}</td>
+              <td class="num">${dur !== null ? dur + " min" : "—"}</td>
+              <td>${a.checkOut ? '<span class="badge b-gray">Completed</span>' : '<span class="badge b-green">Active</span>'}</td>
+            </tr>`;
+                  })
+                  .join("")
+              : `<tr><td colspan="5"><div class="empty"><span class="big">📅</span>No attendance records yet</div></td></tr>`
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+      }
+
+      /* ---------- PAYMENTS ---------- */
+      function renderPayments() {
+        const list = [...db.payments]
+          .filter(
+            (p) =>
+              App.payFilter === "all" ||
+              (p.date || "").startsWith(App.payFilter),
+          )
+          .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+        const thisMonth = revenueForMonth(monthKey());
+        const total = db.payments.reduce(
+          (s, p) => s + Number(p.amount || 0),
+          0,
+        );
+        const avg = db.payments.length
+          ? Math.round(total / db.payments.length)
+          : 0;
+        const months = [
+          ...new Set(db.payments.map((p) => (p.date || "").slice(0, 7))),
+        ]
+          .sort()
+          .reverse();
+
+        return `
+  <div class="grid stats">
+    ${[
+      [
+        "💵",
+        "This month",
+        money(thisMonth),
+        "var(--green)",
+        "rgba(16,185,129,.15)",
+      ],
+      [
+        "📈",
+        "Total revenue",
+        money(total),
+        "var(--accent)",
+        "rgba(59,130,246,.15)",
+      ],
+      [
+        "🧾",
+        "Payments",
+        db.payments.length,
+        "var(--accent-2)",
+        "rgba(139,92,246,.15)",
+      ],
+      ["📊", "Average", money(avg), "var(--amber)", "rgba(245,158,11,.15)"],
+    ]
+      .map(
+        ([ico, lbl, val, color, bg], i) => `
+      <div class="stat" style="animation-delay:${i * 70}ms">
+        <div class="stat-ico" style="background:${bg};color:${color}">${ico}</div>
+        <div><div class="stat-val" style="font-size:22px">${val}</div><div class="stat-lbl">${lbl}</div></div>
+      </div>`,
+      )
+      .join("")}
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div><h3>Payment records</h3><div class="sub">${list.length} transaction${list.length === 1 ? "" : "s"}</div></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <select class="select" data-select="payFilter" style="width:auto">
+          <option value="all" ${App.payFilter === "all" ? "selected" : ""}>All months</option>
+          ${months.map((mk) => `<option value="${mk}" ${App.payFilter === mk ? "selected" : ""}>${monthLabel(mk)} ${mk.slice(0, 4)}</option>`).join("")}
+        </select>
+        <button class="btn" data-action="add-payment">＋ Add Payment</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Member</th><th>Amount</th><th>Plan</th><th>Method</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          ${
+            list.length
+              ? list
+                  .map((p, i) => {
+                    const pl = planOf(p.planId);
+                    return `<tr style="animation:cardIn .35s var(--ease) both;animation-delay:${Math.min(i * 30, 300)}ms">
+              <td><div class="person"><div class="pic" style="width:30px;height:30px;flex:0 0 30px;font-size:11px;${avatarStyle(p.memberName)}">${esc(initials(p.memberName))}</div><b>${esc(p.memberName)}</b></div></td>
+              <td class="num" style="font-weight:800;color:var(--green)">${money(p.amount)}</td>
+              <td>${pl ? esc(pl.name) : "—"}</td>
+              <td><span class="badge b-blue">${esc(p.method || "Cash")}</span></td>
+              <td class="num" style="color:var(--muted)">${esc(p.date)}</td>
+              <td><button class="btn btn-sm btn-red" data-action="del-payment" data-id="${p.id}">🗑</button></td>
+            </tr>`;
+                  })
+                  .join("")
+              : `<tr><td colspan="6"><div class="empty"><span class="big">🧾</span>No payments in this period</div></td></tr>`
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+      }
+
+      /* ---------- PLANS ---------- */
+      function renderPlans() {
+        return `
+  <div class="toolbar" style="justify-content:flex-end">
+    <button class="btn" data-action="add-plan">＋ New Plan</button>
+  </div>
+  <div class="plan-grid">
+    ${db.plans
+      .map((p, i) => {
+        const count = db.members.filter((m) => m.planId === p.id).length;
+        return `<div class="plan ${p.popular ? "popular" : ""}" style="animation-delay:${i * 70}ms">
+        ${p.popular ? '<span class="tag">POPULAR</span>' : ""}
+        <h4><span style="width:10px;height:10px;border-radius:3px;background:${p.color};display:inline-block"></span>${esc(p.name)}</h4>
+        <div class="price">${money(p.price)}<small> / ${esc(p.duration)}</small></div>
+        <ul>${(p.features || []).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+        <div class="foot">
+          <span class="mem-count">👥 ${count} member${count === 1 ? "" : "s"}</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-ghost" data-action="edit-plan" data-id="${p.id}">✏️</button>
+            <button class="btn btn-sm btn-red" data-action="del-plan" data-id="${p.id}">🗑</button>
+          </div>
+        </div>
+      </div>`;
+      })
+      .join("")}
+  </div>`;
+      }
+
+      /* ---------- WORKOUTS ---------- */
+      function renderWorkouts() {
+        return `
+  <div class="toolbar" style="justify-content:flex-end">
+    <button class="btn" data-action="add-workout">＋ New Workout</button>
+  </div>
+  <div class="wk-grid">
+    ${
+      db.workouts.length
+        ? db.workouts
+            .map((w, i) => {
+              const m = memberOf(w.memberId);
+              return `<div class="wk" style="animation-delay:${i * 70}ms">
+        <div class="wk-top">
+          <h4>💪 ${esc(w.name)}</h4>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-ghost" data-action="edit-workout" data-id="${w.id}">✏️</button>
+            <button class="btn btn-sm btn-red" data-action="del-workout" data-id="${w.id}">🗑</button>
+          </div>
+        </div>
+        <span class="pill">${m ? "👤 " + esc(m.name) : "Unassigned"}</span>
+        <div class="desc">${esc(w.description || "No description")}</div>
+        ${(w.exercises || []).length ? `<div class="chips">${w.exercises.map((e) => `<span class="chip">${esc(e)}</span>`).join("")}</div>` : ""}
+      </div>`;
+            })
+            .join("")
+        : `<div class="card"><div class="empty"><span class="big">💪</span>No workout programs yet</div></div>`
+    }
+  </div>`;
+      }
+
+      /* ---------- SETTINGS ---------- */
+      function renderSettings() {
+        const used = (JSON.stringify(db).length / 1024).toFixed(1);
+        return `
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-head"><div><h3>Appearance</h3><div class="sub">Choose how GymPro looks</div></div></div>
+    <div class="setting-row">
+      <div><b>Theme</b><p>Switch between dark and light mode</p></div>
+      <div class="segmented">
+        <button data-action="set-theme" data-theme-val="dark"  class="${db.settings.theme === "dark" ? "on" : ""}">🌙 Dark</button>
+        <button data-action="set-theme" data-theme-val="light" class="${db.settings.theme === "light" ? "on" : ""}">☀️ Light</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-head"><div><h3>Data</h3><div class="sub">${used} KB stored locally in this browser</div></div></div>
+    <div class="setting-row">
+      <div><b>Export backup</b><p>Download all gym data as a JSON file</p></div>
+      <button class="btn btn-ghost" data-action="export-data">⬇ Export</button>
+    </div>
+    <div class="setting-row">
+      <div><b>Import backup</b><p>Restore data from a previous JSON export</p></div>
+      <button class="btn btn-ghost" data-action="import-data">⬆ Import</button>
+    </div>
+    <div class="setting-row">
+      <div><b>Reload demo data</b><p>Replace everything with sample members and payments</p></div>
+      <button class="btn btn-amber" data-action="reset-demo">↻ Reset demo</button>
+    </div>
+    <div class="setting-row">
+      <div><b>Clear all data</b><p>Delete every member, payment and record permanently</p></div>
+      <button class="btn btn-red" data-action="clear-data">🗑 Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div><h3>Shortcuts</h3><div class="sub">Move faster</div></div></div>
+    <div class="setting-row"><div><b>Ctrl / ⌘ + K</b><p>Jump to member search</p></div><span class="badge b-blue">Search</span></div>
+    <div class="setting-row"><div><b>Esc</b><p>Close any dialog or side panel</p></div><span class="badge b-blue">Close</span></div>
+    <div class="setting-row"><div><b>G then M</b><p>Quickly open Members page</p></div><span class="badge b-blue">Navigate</span></div>
+  </div>`;
+      }
+
+      /* ============================================================
+   4. CRUD ACTIONS
+   ============================================================ */
+      function memberFormModal(id) {
+        const m = id ? memberOf(id) : null;
+        openModal({
+          title: m ? "Edit member" : "Add new member",
+          sub: m
+            ? "Update the details below"
+            : "Fill in the member information",
+          submitLabel: m ? "Save changes" : "Add member",
+          body: `
+      <div class="fg"><label class="fl">Full name *</label><input class="input" name="name" required value="${m ? esc(m.name) : ""}" placeholder="e.g. Sourabh Singh"></div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Phone *</label><input class="input" name="phone" required value="${m ? esc(m.phone) : ""}" placeholder="10-digit number"></div>
+        <div class="fg"><label class="fl">Email</label><input class="input" type="email" name="email" value="${m ? esc(m.email || "") : ""}" placeholder="name@mail.com"></div>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Age</label><input class="input" type="number" name="age" min="10" max="100" value="${m ? esc(m.age) : ""}"></div>
+        <div class="fg"><label class="fl">Gender</label>
+          <select class="select" name="gender">
+            ${["Male", "Female", "Other"].map((g) => `<option ${m && m.gender === g ? "selected" : ""}>${g}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Plan</label>
+          <select class="select" name="planId">
+            ${db.plans.map((p) => `<option value="${p.id}" ${m && m.planId === p.id ? "selected" : !m && p.popular ? "selected" : ""}>${esc(p.name)} — ${money(p.price)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Status</label>
+          <select class="select" name="status">
+            <option value="active" ${!m || m.status === "active" ? "selected" : ""}>Active</option>
+            <option value="inactive" ${m && m.status === "inactive" ? "selected" : ""}>Inactive</option>
+          </select>
+        </div>
+      </div>`,
+          onSubmit: (data) => {
+            if (!data.name.trim() || !data.phone.trim()) {
+              toast("Name and phone are required.", "err", "Missing details");
+              return false;
+            }
+            if (m) {
+              Object.assign(m, {
+                name: data.name.trim(),
+                phone: data.phone.trim(),
+                email: data.email.trim(),
+                age: data.age,
+                gender: data.gender,
+                planId: data.planId,
+                status: data.status,
+              });
+              save();
+              toast(`${m.name}'s profile updated.`, "ok", "Saved");
+            } else {
+              db.members.push({
+                id: uid(),
+                name: data.name.trim(),
+                phone: data.phone.trim(),
+                email: data.email.trim(),
+                age: data.age,
+                gender: data.gender,
+                planId: data.planId,
+                status: data.status,
+                checkedIn: false,
+                joinDate: isoDate(),
+                lastPayment: null,
+              });
+              save();
+              toast(
+                `${data.name.trim()} has been added.`,
+                "ok",
+                "Member added",
+              );
+            }
+            rerender();
+            updateLiveCount();
+          },
+        });
+      }
+
+      function viewMember(id) {
+        const m = memberOf(id);
+        if (!m) return;
+        const p = planOf(m.planId),
+          st = memberStatus(m),
+          d = daysLeft(m);
+        const pays = db.payments
+          .filter((x) => x.memberId === id)
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .slice(0, 5);
+        const visits = db.attendance.filter((a) => a.memberId === id).length;
+        const due = expiresOn(m);
+
+        openDrawer(`
+    <div class="drawer-hero">
+      <div class="pic" style="${avatarStyle(m.name)}">${esc(initials(m.name))}</div>
+      <div style="flex:1;min-width:0">
+        <h2>${esc(m.name)}</h2>
+        <small>${esc(m.phone)} · Member since ${esc(m.joinDate || "—")}</small>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge ${st.cls}">${st.label}</span>
+          ${p ? `<span class="badge" style="background:color-mix(in srgb,${p.color} 18%,transparent);color:${p.color}">${esc(p.name)}</span>` : ""}
+        </div>
+      </div>
+      <button class="icon-btn" data-action="close-modal" style="width:34px;height:34px;font-size:13px">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="kv">
+        <div><small>Email</small><b>${esc(m.email || "—")}</b></div>
+        <div><small>Age / Gender</small><b>${esc(m.age || "—")} · ${esc(m.gender || "—")}</b></div>
+        <div><small>Expires on</small><b>${due ? isoDate(due) : "—"}</b></div>
+        <div><small>Days left</small><b style="color:${d === null ? "var(--muted)" : d < 0 ? "var(--red)" : d <= 7 ? "var(--amber)" : "var(--green)"}">${d === null ? "—" : d < 0 ? Math.abs(d) + " days overdue" : d + " days"}</b></div>
+        <div><small>Total visits</small><b>${visits}</b></div>
+        <div><small>Total paid</small><b>${money(db.payments.filter((x) => x.memberId === id).reduce((s, x) => s + Number(x.amount), 0))}</b></div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" data-action="edit-member" data-id="${m.id}">✏️ Edit</button>
+        <button class="btn btn-green" data-action="add-payment" data-id="${m.id}">💰 Add payment</button>
+        <button class="btn btn-ghost" data-action="${m.checkedIn ? "checkout" : "checkin-member"}" data-id="${m.id}">${m.checkedIn ? "🚪 Check out" : "✅ Check in"}</button>
+      </div>
+
+      <div>
+        <div class="card-head" style="margin-bottom:10px"><div><h3 style="font-size:14px">Recent payments</h3></div></div>
+        <div class="mini-list">
+          ${pays.length ? pays.map((x) => `<div class="mini"><span>${esc(x.date)} · ${esc(x.method || "Cash")}</span><b style="color:var(--green)">${money(x.amount)}</b></div>`).join("") : `<div class="hint">No payments recorded yet.</div>`}
+        </div>
+      </div>
+    </div>`);
+      }
+
+      async function removeMember(id) {
+        const m = memberOf(id);
+        if (!m) return;
+        const ok = await confirmDialog(
+          `Delete ${m.name}? Their payment and attendance history will also be removed.`,
+          "Delete member",
+        );
+        if (!ok) return;
+        db.members = db.members.filter((x) => x.id !== id);
+        db.payments = db.payments.filter((p) => p.memberId !== id);
+        db.attendance = db.attendance.filter((a) => a.memberId !== id);
+        db.workouts.forEach((w) => {
+          if (w.memberId === id) w.memberId = "";
+        });
+        save();
+        toast(`${m.name} was deleted.`, "ok", "Removed");
+        rerender();
+        updateLiveCount();
+      }
+
+      function paymentModal(memberId) {
+        const preselect = memberId || "";
+        const first = preselect ? memberOf(preselect) : null;
+        openModal({
+          title: "Add payment",
+          sub: "Record a membership payment",
+          submitLabel: "Save payment",
+          body: `
+      <div class="fg"><label class="fl">Member *</label>
+        <select class="select" name="memberId" id="payMember" required>
+          <option value="">Select member…</option>
+          ${db.members.map((m) => `<option value="${m.id}" ${m.id === preselect ? "selected" : ""}>${esc(m.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Amount (₹) *</label>
+          <input class="input" type="number" name="amount" min="1" required id="payAmount" value="${first && planOf(first.planId) ? planOf(first.planId).price : ""}">
+        </div>
+        <div class="fg"><label class="fl">Method</label>
+          <select class="select" name="method">
+            <option>Cash</option><option>UPI</option><option>Card</option><option>Bank transfer</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Plan</label>
+        <select class="select" name="planId" id="payPlan">
+          ${db.plans.map((p) => `<option value="${p.id}" ${first && first.planId === p.id ? "selected" : ""}>${esc(p.name)} — ${money(p.price)}</option>`).join("")}
+        </select>
+      </div>`,
+          onSubmit: (data) => {
+            const m = memberOf(data.memberId);
+            if (!m) {
+              toast("Please select a member.", "err");
+              return false;
+            }
+            const amount = Number(data.amount);
+            if (!amount || amount <= 0) {
+              toast("Enter a valid amount.", "err");
+              return false;
+            }
+            db.payments.push({
+              id: uid(),
+              memberId: m.id,
+              memberName: m.name,
+              amount,
+              planId: data.planId,
+              method: data.method,
+              date: isoDate(),
+            });
+            m.lastPayment = isoDate();
+            if (m.status === "inactive") m.status = "active";
+            save();
+            toast(
+              `${money(amount)} recorded for ${m.name}.`,
+              "ok",
+              "Payment saved",
+            );
+            rerender();
+            updateLiveCount();
+          },
+        });
+        const sel = $("#payMember");
+        if (sel)
+          sel.addEventListener("change", () => {
+            const m = memberOf(sel.value);
+            const p = m ? planOf(m.planId) : null;
+            if (p) {
+              $("#payAmount").value = p.price;
+              $("#payPlan").value = p.id;
+            }
+          });
+      }
+
+      function removePayment(id) {
+        const p = db.payments.find((x) => x.id === id);
+        if (!p) return;
+        db.payments = db.payments.filter((x) => x.id !== id);
+        save();
+        toast("Payment record deleted.", "ok");
+        rerender();
+      }
+
+      function planModal(id) {
+        const p = id ? planOf(id) : null;
+        const colors = [
+          "#3b82f6",
+          "#8b5cf6",
+          "#f59e0b",
+          "#10b981",
+          "#ef4444",
+          "#06b6d4",
+        ];
+        openModal({
+          title: p ? "Edit plan" : "New plan",
+          sub: "Define pricing and features",
+          submitLabel: p ? "Save plan" : "Create plan",
+          body: `
+      <div class="fg"><label class="fl">Plan name *</label><input class="input" name="name" required value="${p ? esc(p.name) : ""}" placeholder="e.g. Premium"></div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Price (₹) *</label><input class="input" type="number" name="price" min="1" required value="${p ? p.price : ""}"></div>
+        <div class="fg"><label class="fl">Duration</label><input class="input" name="duration" value="${p ? esc(p.duration) : "1 Month"}" placeholder="1 Month"></div>
+      </div>
+      <div class="grid2">
+        <div class="fg"><label class="fl">Days valid</label><input class="input" type="number" name="days" min="1" value="${p ? p.days : 30}"></div>
+        <div class="fg"><label class="fl">Colour</label>
+          <select class="select" name="color">
+            ${colors.map((c) => `<option value="${c}" ${p && p.color === c ? "selected" : ""}>${c}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Features (comma separated)</label><input class="input" name="features" value="${p ? esc((p.features || []).join(", ")) : "Gym Access, Locker Room"}"></div>`,
+          onSubmit: (data) => {
+            if (!data.name.trim() || !Number(data.price)) {
+              toast("Name and price are required.", "err");
+              return false;
+            }
+            const payload = {
+              name: data.name.trim(),
+              price: Number(data.price),
+              duration: data.duration.trim() || "1 Month",
+              days: Number(data.days) || 30,
+              color: data.color,
+              features: data.features
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            };
+            if (p) Object.assign(p, payload);
+            else db.plans.push({ id: "plan_" + uid(), ...payload });
+            save();
+            toast(p ? "Plan updated." : "New plan created.", "ok");
+            rerender();
+          },
+        });
+      }
+
+      async function removePlan(id) {
+        const p = planOf(id);
+        const used = db.members.filter((m) => m.planId === id).length;
+        if (used) {
+          toast(
+            `${used} member(s) are on this plan. Move them first.`,
+            "err",
+            "Cannot delete",
+          );
+          return;
+        }
+        const ok = await confirmDialog(
+          `Delete the "${p.name}" plan?`,
+          "Delete plan",
+        );
+        if (!ok) return;
+        db.plans = db.plans.filter((x) => x.id !== id);
+        save();
+        toast("Plan deleted.", "ok");
+        rerender();
+      }
+
+      function workoutModal(id) {
+        const w = id ? db.workouts.find((x) => x.id === id) : null;
+        openModal({
+          title: w ? "Edit workout" : "New workout",
+          sub: "Assign a program to a member",
+          submitLabel: w ? "Save workout" : "Create workout",
+          body: `
+      <div class="fg"><label class="fl">Workout name *</label><input class="input" name="name" required value="${w ? esc(w.name) : ""}" placeholder="e.g. Push Pull Legs"></div>
+      <div class="fg"><label class="fl">Assign to member</label>
+        <select class="select" name="memberId">
+          <option value="">Unassigned</option>
+          ${db.members.map((m) => `<option value="${m.id}" ${w && w.memberId === m.id ? "selected" : ""}>${esc(m.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Description</label><textarea class="input" name="description" rows="2" placeholder="Short summary…">${w ? esc(w.description || "") : ""}</textarea></div>
+      <div class="fg"><label class="fl">Exercises (comma separated)</label><input class="input" name="exercises" value="${w ? esc((w.exercises || []).join(", ")) : ""}" placeholder="Squats 3x12, Bench 3x10"></div>`,
+          onSubmit: (data) => {
+            if (!data.name.trim()) {
+              toast("Workout name is required.", "err");
+              return false;
+            }
+            const payload = {
+              name: data.name.trim(),
+              memberId: data.memberId,
+              description: data.description.trim(),
+              exercises: data.exercises
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            };
+            if (w) Object.assign(w, payload);
+            else db.workouts.push({ id: uid(), ...payload });
+            save();
+            toast(w ? "Workout updated." : "Workout created.", "ok");
+            rerender();
+          },
+        });
+      }
+
+      async function removeWorkout(id) {
+        const ok = await confirmDialog(
+          "Delete this workout program?",
+          "Delete workout",
+        );
+        if (!ok) return;
+        db.workouts = db.workouts.filter((x) => x.id !== id);
+        save();
+        toast("Workout deleted.", "ok");
+        rerender();
+      }
+
+      /* ---------- ATTENDANCE ACTIONS ---------- */
+      function doCheckIn(memberId) {
+        const id = memberId || ($("#ciSelect") ? $("#ciSelect").value : "");
+        if (!id) {
+          toast("Select a member to check in.", "err");
+          return;
+        }
+        const m = memberOf(id);
+        if (!m) return;
+        if (m.checkedIn) {
+          toast(`${m.name} is already checked in.`, "err");
+          return;
+        }
+        m.checkedIn = true;
+        db.attendance.unshift({
+          id: uid(),
+          memberId: m.id,
+          memberName: m.name,
+          checkIn: isoNow(),
+          checkOut: null,
+        });
+        save();
+        toast(
+          `${m.name} checked in. Have a great session!`,
+          "ok",
+          "Checked in",
+        );
+        rerender();
+        updateLiveCount();
+      }
+
+      function doCheckOut(memberId) {
+        const m = memberOf(memberId);
+        if (!m) return;
+        const rec = db.attendance.find(
+          (a) => a.memberId === m.id && !a.checkOut,
+        );
+        if (!rec) {
+          toast(`${m.name} is not checked in.`, "err");
+          return;
+        }
+        rec.checkOut = isoNow();
+        m.checkedIn = false;
+        const mins = Math.max(
+          1,
+          Math.round(
+            (new Date(rec.checkOut.replace(" ", "T")) -
+              new Date(rec.checkIn.replace(" ", "T"))) /
+              60000,
+          ),
+        );
+        save();
+        toast(`${m.name} checked out after ${mins} min.`, "ok", "Checked out");
+        rerender();
+        updateLiveCount();
+      }
+
+      /* ---------- DATA ---------- */
+      function exportData() {
+        const blob = new Blob([JSON.stringify(db, null, 2)], {
+          type: "application/json",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `gympro-backup-${isoDate()}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast("Backup file downloaded.", "ok", "Export complete");
+      }
+
+      async function resetDemo() {
+        const ok = await confirmDialog(
+          "Replace all current data with demo members and payments?",
+          "Reset demo data",
+        );
+        if (!ok) return;
+        db = seedDemo();
+        db.settings = { theme: db.settings?.theme || "dark" };
+        save();
+        toast("Demo data loaded.", "ok");
+        go("dashboard");
+        updateLiveCount();
+      }
+
+      async function clearData() {
+        const ok = await confirmDialog(
+          "Permanently delete every member, payment and workout?",
+          "Clear everything",
+        );
+        if (!ok) return;
+        const theme = db.settings.theme;
+        db = {
+          members: [],
+          payments: [],
+          attendance: [],
+          workouts: [],
+          plans: defaultPlans(),
+          settings: { theme },
+          version: 2,
+        };
+        save();
+        toast("All data cleared.", "ok");
+        go("dashboard");
+        updateLiveCount();
+      }
+
+      function importData(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!data || !Array.isArray(data.members))
+              throw new Error("Invalid file");
+            db = { ...db, ...data, settings: db.settings };
+            save();
+            toast("Backup restored successfully.", "ok");
+            go("dashboard");
+            updateLiveCount();
+          } catch (err) {
+            toast(
+              "That file is not a valid GymPro backup.",
+              "err",
+              "Import failed",
+            );
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      /* ============================================================
+   5. THEME
+   ============================================================ */
+      function applyTheme() {
+        document.documentElement.setAttribute(
+          "data-theme",
+          db.settings.theme || "dark",
+        );
+        const btn = $("#themeBtn");
+        if (btn)
+          btn.textContent =
+            (db.settings.theme || "dark") === "dark" ? "🌙" : "☀️";
+      }
+      function setTheme(val) {
+        db.settings.theme = val;
+        save();
+        applyTheme();
+        toast(`Switched to ${val} mode.`, "ok", "Theme updated");
+        if (App.page === "settings") rerender();
+      }
+      function toggleTheme() {
+        setTheme((db.settings.theme || "dark") === "dark" ? "light" : "dark");
+      }
+
+      function updateLiveCount() {
+        const n = db.members.filter((m) => m.checkedIn).length;
+        const el = $("#liveCount");
+        if (el) el.textContent = n;
+      }
+
+      /* ============================================================
+   6. EVENT WIRING
+   ============================================================ */
+      const actions = {
+        nav: (el) => go(el.dataset.page),
+        "toggle-nav": () => document.body.classList.toggle("nav-open"),
+        "close-nav": () => document.body.classList.remove("nav-open"),
+        theme: () => toggleTheme(),
+        "set-theme": (el) => setTheme(el.dataset.themeVal),
+        "close-modal": () => closeModal(),
+
+        "add-member": () => memberFormModal(),
+        "edit-member": (el) => memberFormModal(el.dataset.id),
+        "view-member": (el) => viewMember(el.dataset.id),
+        "del-member": (el) => removeMember(el.dataset.id),
+
+        "add-payment": (el) => paymentModal(el.dataset.id),
+        "del-payment": (el) => removePayment(el.dataset.id),
+
+        "add-plan": () => planModal(),
+        "edit-plan": (el) => planModal(el.dataset.id),
+        "del-plan": (el) => removePlan(el.dataset.id),
+
+        "add-workout": () => workoutModal(),
+        "edit-workout": (el) => workoutModal(el.dataset.id),
+        "del-workout": (el) => removeWorkout(el.dataset.id),
+
+        checkin: () => doCheckIn(),
+        "checkin-member": (el) => {
+          closeModal();
+          setTimeout(() => doCheckIn(el.dataset.id), 180);
+        },
+        checkout: (el) => doCheckOut(el.dataset.id),
+
+        "export-data": () => exportData(),
+        "import-data": () => $("#importFile").click(),
+        "reset-demo": () => resetDemo(),
+        "clear-data": () => clearData(),
+      };
+
+      document.addEventListener("click", (e) => {
+        const t = e.target.closest("[data-action]");
+        if (t) {
+          const fn = actions[t.dataset.action];
+          if (fn) {
+            e.preventDefault();
+            fn(t);
+            return;
+          }
+        }
+        // drawer backdrop / modal backdrop dismiss
+        if (e.target.matches("[data-close]")) closeModal();
+        // mobile nav overlay
+        if (
+          document.body.classList.contains("nav-open") &&
+          !e.target.closest(".sidebar") &&
+          !e.target.closest('[data-action="toggle-nav"]')
+        ) {
+          document.body.classList.remove("nav-open");
+        }
+      });
+
+      document.addEventListener("input", (e) => {
+        if (e.target.id === "memberSearch") {
+          App.q = e.target.value;
+          refreshMemberRows();
+        }
+      });
+
+      document.addEventListener("change", (e) => {
+        const sel = e.target.dataset.select;
+        if (sel === "status") {
+          App.status = e.target.value;
+          refreshMemberRows();
+        }
+        if (sel === "sort") {
+          App.sort = e.target.value;
+          refreshMemberRows();
+        }
+        if (sel === "payFilter") {
+          App.payFilter = e.target.value;
+          rerender();
+        }
+        if (sel === "attFilter") {
+          App.attFilter = e.target.value;
+          rerender();
+        }
+        if (e.target.id === "importFile" && e.target.files[0])
+          importData(e.target.files[0]);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeModal();
+          document.body.classList.remove("nav-open");
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+          e.preventDefault();
+          if (App.page !== "members") go("members");
+          setTimeout(() => {
+            const s = $("#memberSearch");
+            if (s) {
+              s.focus();
+              s.select();
+            }
+          }, 120);
+        }
+        // G then M
+        if (
+          e.key.toLowerCase() === "g" &&
+          !e.ctrlKey &&
+          !e.metaKey &&
+          !/input|textarea|select/i.test(document.activeElement.tagName)
+        ) {
+          window.__gPressed = true;
+          setTimeout(() => {
+            window.__gPressed = false;
+          }, 900);
+        } else if (
+          e.key.toLowerCase() === "m" &&
+          window.__gPressed &&
+          !/input|textarea|select/i.test(document.activeElement.tagName)
+        ) {
+          go("members");
+          window.__gPressed = false;
+        }
+      });
+
+      /* live timers + clock */
+      setInterval(() => {
+        $$("[data-since]").forEach((el) => {
+          el.textContent = elapsed(el.dataset.since);
+        });
+        const c = $("#clock");
+        if (c) {
+          const d = new Date();
+          c.textContent = d.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        }
+      }, 1000);
+
+      /* boot */
+      function boot() {
+        applyTheme();
+        go("dashboard");
+        updateLiveCount();
+        setTimeout(
+          () =>
+            toast(
+              "Welcome back! Demo data is loaded — manage it from Settings.",
+              "info",
+              "GymPro ready",
+            ),
+          700,
+        );
+      }
+      boot();
+    </script>
+  </body>
+</html>
